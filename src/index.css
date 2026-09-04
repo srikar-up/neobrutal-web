@@ -1,0 +1,21 @@
+/* Base resets & styles for OP Nawaz Public School */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: #F7F9F5;
+  color: #122818;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.font-mono-swiss {
+  font-family: 'Space Grotesk', monospace;
+}
