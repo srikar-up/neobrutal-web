@@ -35,8 +35,8 @@ service cloud.firestore {
     function isAuthorizedAdmin() {
       return request.auth != null && 
              request.auth.token.email in [
-               "srikarsensai@gmail.com",
-               "mohsinnawaz9541@gmail.com"
+               "your_admin_email@gmail.com",
+               "second_admin_email@gmail.com"
                // Example for future:
                // ,"principal@opnawaz.edu",
                // ,"newadmin@gmail.com"
@@ -86,11 +86,11 @@ Whenever you want to give admin access to a new email address:
 2. Locate the `isAuthorizedAdmin()` function near the top.
 3. Inside the `in [ ... ]` list, add a comma and the new email wrapped in quotation marks:
    ```javascript
-   request.auth.token.email in [
-     "srikarsensai@gmail.com",
-     "mohsinnawaz9541@gmail.com",
-     "newperson@gmail.com"
-   ];
+    request.auth.token.email in [
+      "your_admin_email@gmail.com",
+      "second_admin_email@gmail.com",
+      "newperson@gmail.com"
+    ];
    ```
 4. Click the blue **Publish** button in the top right.
 
