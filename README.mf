@@ -8,28 +8,13 @@
 [![License](https://img.shields.io/badge/License-Proprietary-122818?style=for-the-badge)](LICENSE)
 
 > **Official web portal and real-time cloud administrative management system for Opinawaz Universal Public School, located in Karewa, Kulgam, Jammu & Kashmir (PIN: 192231).**  
-> Designed with a high-contrast **Neo-Brutalist** aesthetic, instant **Google Firebase Firestore** data synchronization, **Google OAuth** authentication with database-level security rules, and responsive design for students, parents, and institutional staff.
-
----
-
-### 🌐 Live Official Site Preview
-
-> 🚀 **Live Production Deployment**: **[https://opinawaz.netlify.app/](https://opinawaz.netlify.app/)**  
-> *(Click the preview image below to visit the live website)*
-
-[![Opinawaz Universal Public School — Live Website Preview](./src/assets/screencapture-opinawaz-netlify-app-2026-09-05-14_34_13.png)](https://opinawaz.netlify.app/)
-
-<p align="center">
-  <a href="https://opinawaz.netlify.app/" target="_blank">
-    <strong>🔗 Click here to open the live website in a new tab: https://opinawaz.netlify.app/</strong>
-  </a>
-</p>
+> 🔗 **Live Website**: [https://opinawaz.netlify.app/](https://opinawaz.netlify.app/)  
+> 📸 **Full Page Screenshot**: [Jump to Website Preview at Bottom ↓](#website-preview)
 
 ---
 
 ## 📌 Table of Contents
 
-- [Live Preview](#-live-official-site-preview)
 - [Overview](#-overview)
 - [Design Language & Aesthetics](#-design-language--aesthetics)
 - [Key Features](#-key-features)
@@ -46,7 +31,9 @@
   - [Security Rules & Whitelist](#firestore-security-rules)
   - [Authorizing Admin Emails](#authorizing-new-admin-emails)
 - [Admin Portal Access Guide](#-admin-portal-access-guide)
-- [License & Contact](#-license--contact)
+- [Institutional Contacts & Location](#-institutional-contacts--location)
+- [📸 Full Website Preview & Screenshot](#website-preview)
+- [License](#-license)
 
 ---
 
@@ -344,6 +331,30 @@ Once on the sign-in screen, click **Continue with Google** and authenticate usin
 - **Telephone**: `+91 94190 28723` / `+91 1931 260000`
 - **Email**: `opnawazschool@gmail.com`
 - **Office Timings**: Monday – Saturday (9:00 AM – 3:30 PM)
+
+---
+
+<a id="website-preview"></a>
+## 📸 Full Website Preview & Screenshot
+
+> 🚀 **Live Production Website**: **[https://opinawaz.netlify.app/](https://opinawaz.netlify.app/)**  
+> *(Click anywhere on the full-page screenshot below to open the live site in a new tab)*
+
+<p align="center">
+  <a href="https://opinawaz.netlify.app/" target="_blank" rel="noopener noreferrer">
+    <img src="./src/assets/screencapture-opinawaz-netlify-app-2026-09-05-14_34_13.png" alt="Opinawaz Universal Public School — Full Web Screenshot Preview" width="100%" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://opinawaz.netlify.app/" target="_blank" rel="noopener noreferrer">
+    <strong>👉 Click here to visit the live site: https://opinawaz.netlify.app/ 👈</strong>
+  </a>
+</p>
+
+<p align="center">
+  <a href="#-table-of-contents"><strong>↑ Back to Top / Table of Contents</strong></a>
+</p>
 
 ---
 
