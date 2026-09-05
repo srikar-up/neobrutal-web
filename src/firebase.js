@@ -41,13 +41,13 @@ export function getFirebaseConfig() {
   }
 
   return {
-    apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || '',
-    authDomain: import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN || '',
-    projectId: import.meta.env?.VITE_FIREBASE_PROJECT_ID || '',
-    storageBucket: import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET || '',
-    messagingSenderId: import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-    appId: import.meta.env?.VITE_FIREBASE_APP_ID || '',
-    measurementId: import.meta.env?.VITE_FIREBASE_MEASUREMENT_ID || ''
+    apiKey: import.meta.env?.VITE_FIREBASE_API_KEY || 'AIzaSyBuizG8eBYv0v-F3uzS3TUBhrm2h9VYn2E',
+    authDomain: import.meta.env?.VITE_FIREBASE_AUTH_DOMAIN || 'opnawazschool.firebaseapp.com',
+    projectId: import.meta.env?.VITE_FIREBASE_PROJECT_ID || 'opnawazschool',
+    storageBucket: import.meta.env?.VITE_FIREBASE_STORAGE_BUCKET || 'opnawazschool.firebasestorage.app',
+    messagingSenderId: import.meta.env?.VITE_FIREBASE_MESSAGING_SENDER_ID || '316272521255',
+    appId: import.meta.env?.VITE_FIREBASE_APP_ID || '1:316272521255:web:4fe6918c3b081666f85e02',
+    measurementId: import.meta.env?.VITE_FIREBASE_MEASUREMENT_ID || 'G-NTFT52RXPQ'
   };
 }
 
