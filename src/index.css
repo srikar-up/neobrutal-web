@@ -5,6 +5,14 @@
 
 html {
   scroll-behavior: smooth;
+  zoom: 0.9;
+}
+
+/* Fallback for browsers that do not support zoom */
+@supports not (zoom: 0.9) {
+  html {
+    font-size: 14.4px;
+  }
 }
 
 body {
@@ -20,9 +28,3 @@ body {
   font-family: 'Space Grotesk', monospace;
 }
 
-/* 90% Desktop Scaling: Automatically renders the website in the refined, compact 90% proportion on desktop viewports */
-@media (min-width: 1024px) {
-  body {
-    zoom: 0.9;
-  }
-}
