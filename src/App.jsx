@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import schoolLogo from './assets/opnawazlogo.jpeg';
+import nobgLogo from './assets/nobglogo.png';
 import AdminPanel from './AdminPanel';
 import { getTopperImageStyle, getCroppedImageStyle } from './imageHelper';
 import {
@@ -13,7 +14,11 @@ import {
   subscribeToFaqs,
   subscribeToEmergencyBanner,
   subscribeToContactInfo,
+  subscribeToHeroSlides,
   saveContactInfoDoc,
+  saveHeroSlideDoc,
+  deleteHeroSlideDoc,
+  saveAllHeroSlidesDoc,
   addInquiryDoc,
   updateInquiryStatusDoc,
   deleteInquiryDoc,
@@ -46,22 +51,21 @@ const defaultContactInfo = {
   whatsapp: "https://wa.me/919419028723"
 };
 
-const heroImages = [
+const initialHeroSlides = [
   {
+    id: "slide-1",
     url: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1920&q=80",
     label: "MAIN CAMPUS & ADMINISTRATIVE BLOCK — KULGAM"
   },
   {
+    id: "slide-2",
     url: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1920&q=80",
     label: "ACTIVE CLASSROOM LEARNING & INTERACTION"
   },
   {
+    id: "slide-3",
     url: "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1920&q=80",
     label: "MODERN SCIENCE & COMPUTER LABS"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&w=1920&q=80",
-    label: "SPORTS FIELD & OUTDOOR ACTIVITIES"
   }
 ];
 
@@ -139,21 +143,38 @@ const recentEvents = [
     date: "AUGUST 2026",
     category: "SPORTS",
     desc: "Over 400 students participated across sprint runs, tug-of-war, relay races, and badminton finals with trophy presentations by local sports dignitaries.",
-    img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80"
+    img: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=800&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=1200&q=80"
+    ]
   },
   {
     title: "Science & Environmental Innovation Exhibition",
     date: "JULY 2026",
     category: "ACADEMICS",
     desc: "Students built 35+ working models on solar water purifiers, valley watershed preservation, and automated robotics in agriculture.",
-    img: "https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?auto=format&fit=crop&w=800&q=80"
+    img: "https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?auto=format&fit=crop&w=800&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1507668077129-56e32842fceb?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1200&q=80"
+    ]
   },
   {
     title: "Seerat Conference & Moral Values Symposium",
     date: "JUNE 2026",
     category: "CULTURE",
     desc: "Inspiring speeches and debate contests on ethics, moral discipline, and community development delivered by middle and high school students.",
-    img: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80"
+    img: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=800&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80",
+      "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80"
+    ]
   }
 ];
 
@@ -202,7 +223,7 @@ const faqList = [
   },
   {
     q: "Which curriculum and examination board does the school follow?",
-    a: "OP Nawaz Public School follows the recognized Jammu & Kashmir State Board (JKBOSE) curriculum, supplemented with modern interactive STEM modules, phonics-based English literacy, and computer education."
+    a: "Opinawaz Universal Public School follows the recognized Jammu & Kashmir State Board (JKBOSE) curriculum, supplemented with modern interactive STEM modules, phonics-based English literacy, and computer education."
   },
   {
     q: "What feeder areas and routes are covered by the school buses?",
@@ -230,6 +251,30 @@ export default function App() {
   const [hasScrolled, setHasScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
 
+  // Event Gallery Lightbox Modal State
+  const [activeGalleryEvent, setActiveGalleryEvent] = useState(null);
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
+
+  // Keyboard navigation for pop-up gallery lightbox
+  useEffect(() => {
+    if (!activeGalleryEvent) return;
+    const handleKeyDown = (e) => {
+      const photos = (activeGalleryEvent.gallery && activeGalleryEvent.gallery.length > 0)
+        ? activeGalleryEvent.gallery
+        : [activeGalleryEvent.img].filter(Boolean);
+
+      if (e.key === 'Escape') {
+        setActiveGalleryEvent(null);
+      } else if (e.key === 'ArrowRight') {
+        setActivePhotoIdx((prev) => (prev + 1) % photos.length);
+      } else if (e.key === 'ArrowLeft') {
+        setActivePhotoIdx((prev) => (prev - 1 + photos.length) % photos.length);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeGalleryEvent]);
+
   // Live Stateful Entities for Admin Management
   const [inquiries, setInquiries] = useState(initialInquiries);
   const [announcements, setAnnouncements] = useState(liveAnnouncements);
@@ -238,6 +283,18 @@ export default function App() {
   const [faqs, setFaqs] = useState(faqList);
   const [emergencyBanner, setEmergencyBanner] = useState({ active: false, text: "Notice: Admissions counter is open on Sunday for outstation parents." });
   const [contactInfo, setContactInfo] = useState(defaultContactInfo);
+  const [heroSlides, setHeroSlides] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('opnawaz_hero_slides');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        } catch (e) {}
+      }
+    }
+    return initialHeroSlides;
+  });
 
   // Firebase Configuration & Connection State
   const [firebaseConfigState, setFirebaseConfigState] = useState(getFirebaseConfig());
@@ -284,6 +341,14 @@ export default function App() {
         setContactInfo((prev) => ({ ...prev, ...data }));
       }
     });
+    const unsubHero = subscribeToHeroSlides((data) => {
+      if (data && data.length > 0) {
+        setHeroSlides(data);
+        try {
+          localStorage.setItem('opnawaz_hero_slides', JSON.stringify(data));
+        } catch (e) {}
+      }
+    });
 
     return () => {
       unsubAuth();
@@ -294,6 +359,7 @@ export default function App() {
       unsubFaqs();
       unsubBanner();
       unsubContact();
+      unsubHero();
     };
   }, [firebaseConfigState]);
 
@@ -367,11 +433,12 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (!heroSlides || heroSlides.length === 0) return;
     const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroImages.length);
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 5500);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroSlides.length]);
 
   const handleForm = async (e) => {
     e.preventDefault();
@@ -402,6 +469,7 @@ export default function App() {
     return (
       <AdminPanel
         schoolLogo={schoolLogo}
+        nobgLogo={nobgLogo}
         inquiries={inquiries}
         setInquiries={setInquiries}
         announcements={announcements}
@@ -414,6 +482,8 @@ export default function App() {
         setFaqs={setFaqs}
         emergencyBanner={emergencyBanner}
         setEmergencyBanner={setEmergencyBanner}
+        heroSlides={heroSlides}
+        setHeroSlides={setHeroSlides}
         onBackToWebsite={handleBackToWebsite}
         // Firebase Cloud Sync Props
         isFirebaseConnected={isFirebaseConnected}
@@ -433,6 +503,9 @@ export default function App() {
         saveFaqDoc={saveFaqDoc}
         deleteFaqDoc={deleteFaqDoc}
         saveEmergencyBannerDoc={saveEmergencyBannerDoc}
+        saveHeroSlideDoc={saveHeroSlideDoc}
+        deleteHeroSlideDoc={deleteHeroSlideDoc}
+        saveAllHeroSlidesDoc={saveAllHeroSlidesDoc}
         contactInfo={contactInfo}
         setContactInfo={setContactInfo}
         saveContactInfoDoc={saveContactInfoDoc}
@@ -446,6 +519,7 @@ export default function App() {
           toppers: toppersList,
           activities: recentEvents,
           faqs: faqList,
+          heroSlides: initialHeroSlides,
           emergencyBanner: { active: false, text: "Notice: Admissions counter is open on Sunday for outstation parents." },
           contactInfo: defaultContactInfo
         }}
@@ -476,7 +550,7 @@ export default function App() {
       <div className="bg-[#122818] text-[#D8F3DC] text-xs font-mono px-4 md:px-8 py-2.5 flex flex-col sm:flex-row justify-between items-center gap-2 border-b-2 border-[#122818]">
         <div className="flex items-center gap-2 text-center sm:text-left">
           <span className="w-2 h-2 rounded-full bg-[#52B788] animate-ping"></span>
-          <span>OFFICIAL PORTAL — OP NAWAZ PUBLIC SCHOOL, KULGAM (J&K)</span>
+          <span>OFFICIAL PORTAL — OPINAWAZ UNIVERSAL PUBLIC SCHOOL, KULGAM (J&K)</span>
         </div>
         <div className="flex items-center gap-4 text-[11px] font-mono tracking-wider">
           <a
@@ -501,15 +575,19 @@ export default function App() {
       {/* Sticky Main Navigation */}
       <header className="sticky top-0 z-50 bg-[#F7F9F5]/95 backdrop-blur-md border-b-2 border-[#122818]">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-2 flex items-center justify-between gap-4">
-          <a href="#" className="flex items-center gap-2.5 group">
+          <a href="#" className="flex items-center gap-2 sm:gap-2.5 group min-w-0 flex-shrink-0">
             <img
-              src={schoolLogo}
-              alt="OP Nawaz Public School Logo"
-              className="w-9 h-9 object-contain rounded border-2 border-[#122818] shadow-[2px_2px_0px_#122818] bg-white p-0.5 group-hover:scale-105 transition-transform"
+              src={nobgLogo}
+              alt="Opinawaz Universal Public School Logo"
+              className="h-10 sm:h-11 w-auto object-contain flex-shrink-0 group-hover:scale-105 transition-transform drop-shadow-sm"
             />
-            <div>
-              <h1 className="font-extrabold tracking-tight text-base sm:text-lg leading-none uppercase">OP Nawaz Public School</h1>
-              <p className="text-[9px] font-mono tracking-wider text-[#2D6A4F] uppercase mt-0.5">Kulgam, Jammu & Kashmir</p>
+            <div className="min-w-0">
+              <h1 className="font-extrabold tracking-tight text-xs sm:text-sm md:text-base leading-tight uppercase whitespace-nowrap">
+                Opinawaz Universal Public School
+              </h1>
+              <p className="text-[8px] sm:text-[9px] font-mono tracking-wider text-[#2D6A4F] uppercase mt-0.5 whitespace-nowrap">
+                Kulgam, Jammu & Kashmir
+              </p>
             </div>
           </a>
 
@@ -536,11 +614,12 @@ export default function App() {
 
       {/* Hero Section with Live Background Slideshow */}
       <section className="relative min-h-[calc(100vh-80px)] flex flex-col justify-between border-b-2 border-[#122818] overflow-hidden">
-        {heroImages.map((slide, index) => (
+        {heroSlides.map((slide, index) => (
           <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? "opacity-100 scale-100" : "opacity-0 scale-105"
-              } transition-transform`}
+            key={slide.id || index}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              index === currentSlide ? "opacity-100 scale-100" : "opacity-0 scale-105"
+            } transition-transform`}
           >
             <img
               src={slide.url}
@@ -567,7 +646,7 @@ export default function App() {
             </h2>
 
             <p className="text-base sm:text-lg text-[#D8F3DC] max-w-2xl font-normal leading-relaxed mb-8">
-              Welcome to OP Nawaz Public School, Kulgam. Dedicated to cultivating intellectual excellence, disciplined character, and moral integrity for students from foundation years through higher grades.
+              Welcome to Opinawaz Universal Public School, Kulgam. Dedicated to cultivating intellectual excellence, disciplined character, and moral integrity for students from foundation years through higher grades.
             </p>
 
             <div className="flex flex-wrap gap-4 font-mono text-xs font-bold uppercase">
@@ -608,17 +687,18 @@ export default function App() {
 
         {/* Hero Bottom Bar */}
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full pb-6 pt-4 border-t border-white/20 flex flex-wrap justify-between items-center gap-4 text-xs font-mono text-[#D8F3DC]">
-          <div className="flex items-center gap-2">
-            <span className="text-[#95D5B2] font-bold">[CAMPUS VIEW]</span>
-            <span>{heroImages[currentSlide].label}</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-[#95D5B2] font-bold flex-shrink-0">[CAMPUS VIEW]</span>
+            <span className="truncate">{heroSlides[currentSlide]?.label || heroSlides[0]?.label || "CAMPUS"}</span>
           </div>
           <div className="flex gap-2">
-            {heroImages.map((_, i) => (
+            {heroSlides.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentSlide(i)}
-                className={`px-3 py-1 border border-white font-bold transition-all ${i === currentSlide ? "bg-[#52B788] text-[#122818]" : "bg-transparent text-white hover:bg-white/20"
-                  }`}
+                className={`px-3 py-1 border border-white font-bold transition-all ${
+                  i === currentSlide ? "bg-[#52B788] text-[#122818]" : "bg-transparent text-white hover:bg-white/20"
+                }`}
               >
                 0{i + 1}
               </button>
@@ -666,20 +746,23 @@ export default function App() {
 
       {/* About School */}
       <section id="about" className="py-16 md:py-20 px-4 md:px-8 max-w-7xl mx-auto border-b-2 border-[#122818]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-7">
-            <span className="text-xs font-mono font-bold uppercase text-[#2D6A4F] tracking-widest block mb-2">
-              [ 01 — INSTITUTIONAL PROFILE ]
-            </span>
-            <h3 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
-              Fostering Educational Growth in the Heart of Kulgam
-            </h3>
-            <p className="text-neutral-700 text-sm md:text-base leading-relaxed mb-4">
-              OP Nawaz Public School was established with a singular objective: to deliver high-quality, modern, and value-driven education to the youth of Kulgam and surrounding areas.
-            </p>
-            <p className="text-neutral-700 text-sm md:text-base leading-relaxed mb-6">
-              We bridge standard academic syllabi with life skills, moral foundations, and scientific temper. We place high importance on safe transport, disciplined study habits, and personalized attention by maintaining healthy teacher-student ratios.
-            </p>
+        {/* Top Section: Institutional Profile (Left) + Square White Logo Card (Right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch mb-8">
+          <div className="lg:col-span-7 flex flex-col justify-between">
+            <div>
+              <span className="text-xs font-mono font-bold uppercase text-[#2D6A4F] tracking-widest block mb-2">
+                [ 01 — INSTITUTIONAL PROFILE ]
+              </span>
+              <h3 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-6 leading-tight">
+                Fostering Educational Growth in the Heart of Kulgam
+              </h3>
+              <p className="text-neutral-700 text-sm md:text-base leading-relaxed mb-4">
+                Opinawaz Universal Public School was established with a singular objective: to deliver high-quality, modern, and value-driven education to the youth of Kulgam and surrounding areas.
+              </p>
+              <p className="text-neutral-700 text-sm md:text-base leading-relaxed mb-6">
+                We bridge standard academic syllabi with life skills, moral foundations, and scientific temper. We place high importance on safe transport, disciplined study habits, and personalized attention by maintaining healthy teacher-student ratios.
+              </p>
+            </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border-2 border-[#122818] bg-[#D8F3DC]/40 p-4 text-center font-mono">
               <div>
@@ -701,20 +784,67 @@ export default function App() {
             </div>
           </div>
 
-          <div className="lg:col-span-5 bg-white border-2 border-[#122818] p-6 md:p-8 shadow-[5px_5px_0px_#122818]">
-            <span className="text-xs font-mono font-bold uppercase bg-[#52B788] text-[#122818] px-2.5 py-1 border border-[#122818] inline-block mb-4">
-              MESSAGE FROM THE DESK
-            </span>
-            <h4 className="text-xl font-bold mb-3">"Every child brings unique potential to our classrooms."</h4>
-            <p className="text-xs text-neutral-600 leading-relaxed mb-4">
-              At OP Nawaz Public School, we consider schooling as a partnership between teachers, parents, and children. In today's competitive landscape, academic marks alone are not enough—our students must develop integrity, curiosity, and respect for their community.
-            </p>
-            <div className="pt-4 border-t-2 border-[#122818] flex items-center justify-between font-mono text-xs">
-              <div>
-                <span className="font-bold block">Administration & Principal</span>
-                <span className="text-neutral-500 text-[10px]">OP Nawaz Public School, Kulgam</span>
+          {/* Right: Square White Logo Emblem Card */}
+          <div className="lg:col-span-5 flex">
+            <div className="w-full bg-white text-[#122818] border-2 border-[#122818] p-6 sm:p-7 shadow-[5px_5px_0px_#122818] flex flex-col items-center justify-center text-center">
+              <span className="text-[10px] font-mono font-bold uppercase bg-[#52B788] text-[#122818] px-2.5 py-1 border border-[#122818] inline-block mb-3 shadow-[2px_2px_0px_#122818]">
+                OFFICIAL EMBLEM & CREST
+              </span>
+              <div className="relative my-2 group">
+                <img
+                  src={nobgLogo}
+                  alt="Opinawaz Universal Public School Official Crest"
+                  className="w-32 sm:w-36 h-auto object-contain mx-auto drop-shadow-sm group-hover:scale-105 transition-transform duration-300"
+                />
               </div>
-              <span className="bg-[#D8F3DC] px-2 py-1 border border-[#122818] font-bold">KULGAM</span>
+              <h4 className="font-extrabold text-base sm:text-lg uppercase tracking-tight text-[#122818] mt-1">
+                Opinawaz Universal Public School
+              </h4>
+              <p className="text-[11px] font-mono text-[#2D6A4F] font-bold mt-0.5 mb-2">
+                ESTD. 2005 • KULGAM, J&K
+              </p>
+              <div className="bg-[#E9EFE6] border-2 border-[#122818] p-2.5 w-full my-1 font-mono text-xs shadow-[2px_2px_0px_#122818]">
+                <div className="text-[#122818] font-bold text-xs uppercase tracking-wider">
+                  "PATH BEYOND THE STARS"
+                </div>
+                <div className="text-[11px] text-[#2D6A4F] font-bold mt-0.5">
+                  العلم نور — Knowledge is Light
+                </div>
+              </div>
+              <p className="text-xs text-neutral-600 leading-relaxed mt-2 font-sans">
+                The official emblem symbolizes illuminated wisdom, moral character, and infinite aspiration for every learner.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Full-Width Rectangle: Message from the Desk (Spread from Left to Right) */}
+        <div className="w-full bg-white border-2 border-[#122818] p-6 md:p-8 shadow-[5px_5px_0px_#122818]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            <div className="lg:col-span-8">
+              <span className="text-xs font-mono font-bold uppercase bg-[#52B788] text-[#122818] px-2.5 py-1 border border-[#122818] inline-block mb-3 shadow-[2px_2px_0px_#122818]">
+                MESSAGE FROM THE DESK
+              </span>
+              <h4 className="text-xl sm:text-2xl font-bold mb-3 text-[#122818]">
+                "Every child brings unique potential to our classrooms."
+              </h4>
+              <p className="text-xs sm:text-sm text-neutral-700 leading-relaxed max-w-4xl">
+                At Opinawaz Universal Public School, we consider schooling as a partnership between teachers, parents, and children. In today's competitive landscape, academic marks alone are not enough—our students must develop integrity, curiosity, and respect for their community.
+              </p>
+            </div>
+
+            <div className="lg:col-span-4 lg:border-l-2 lg:border-[#122818] lg:pl-6 flex flex-col justify-between font-mono text-xs gap-3">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-[#2D6A4F] block">OFFICIAL DESK</span>
+                <span className="font-bold text-sm text-[#122818] block mt-0.5">Administration & Principal</span>
+                <span className="text-neutral-500 text-xs block">Opinawaz Universal Public School, Kulgam</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="bg-[#D8F3DC] text-[#122818] px-3 py-1 border border-[#122818] font-bold text-xs shadow-[2px_2px_0px_#122818]">
+                  KULGAM, J&K
+                </span>
+                <span className="text-[10px] text-neutral-500 font-mono">AFFILIATED JKBOSE</span>
+              </div>
             </div>
           </div>
         </div>
@@ -835,41 +965,81 @@ export default function App() {
         {/* VIEW 2: RECENT PROGRAMMES / ACTIVITIES */}
         {hallView === 'EVENTS' && (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {activities.map((ev, idx) => (
-              <div
-                key={idx}
-                className="bg-white border-2 border-[#122818] shadow-[4px_4px_0px_#122818] flex flex-col justify-between overflow-hidden"
-              >
-                <div>
-                  <div className="relative aspect-square w-full border-b-2 border-[#122818] overflow-hidden bg-neutral-100">
-                    <img
-                      src={ev.img}
-                      alt={ev.title}
-                      className="w-full h-full object-cover transition-transform duration-300"
-                      style={getCroppedImageStyle(ev, 50)}
-                    />
-                    <span className="absolute top-2 left-2 bg-[#52B788] text-[#122818] text-[10px] font-mono font-bold px-2 py-0.5 border border-[#122818]">
-                      {ev.category}
-                    </span>
-                    <span className="absolute bottom-2 right-2 bg-white text-[#122818] text-[10px] font-mono font-bold px-2 py-0.5 border border-[#122818]">
-                      {ev.date}
-                    </span>
+            {activities.map((ev, idx) => {
+              const photoCount = (ev.gallery && ev.gallery.length > 0) ? ev.gallery.length : 1;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white border-2 border-[#122818] shadow-[4px_4px_0px_#122818] flex flex-col justify-between overflow-hidden group"
+                >
+                  <div>
+                    {/* Clickable Image with Zoom Effect */}
+                    <div
+                      onClick={() => {
+                        setActiveGalleryEvent(ev);
+                        setActivePhotoIdx(0);
+                      }}
+                      className="relative aspect-square w-full border-b-2 border-[#122818] overflow-hidden bg-neutral-100 cursor-pointer"
+                      title="Click to open full photo gallery"
+                    >
+                      <img
+                        src={ev.img}
+                        alt={ev.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        style={getCroppedImageStyle(ev, 50)}
+                      />
+                      <span className="absolute top-2 left-2 bg-[#52B788] text-[#122818] text-[10px] font-mono font-bold px-2 py-0.5 border border-[#122818]">
+                        {ev.category}
+                      </span>
+                      <span className="absolute bottom-2 right-2 bg-white text-[#122818] text-[10px] font-mono font-bold px-2 py-0.5 border border-[#122818]">
+                        {ev.date}
+                      </span>
+                      {/* Hover Overlay Badge */}
+                      <div className="absolute inset-0 bg-[#122818]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="bg-[#52B788] text-[#122818] text-xs font-mono font-bold px-3 py-1.5 border-2 border-[#122818] shadow-[2px_2px_0px_#122818] uppercase">
+                          🔍 View Gallery ({photoCount})
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="p-5">
+                      <h4
+                        onClick={() => {
+                          setActiveGalleryEvent(ev);
+                          setActivePhotoIdx(0);
+                        }}
+                        className="font-extrabold text-lg leading-snug mb-3 hover:text-[#2D6A4F] cursor-pointer transition-colors"
+                      >
+                        {ev.title}
+                      </h4>
+                      <p className="text-xs text-neutral-600 leading-relaxed font-sans">
+                        {ev.desc}
+                      </p>
+                    </div>
                   </div>
-                  <div className="p-5">
-                    <h4 className="font-extrabold text-lg leading-snug mb-3 hover:text-[#2D6A4F] transition-colors">
-                      {ev.title}
-                    </h4>
-                    <p className="text-xs text-neutral-600 leading-relaxed">
-                      {ev.desc}
-                    </p>
+
+                  {/* Bottom Action Strip with View Gallery Button */}
+                  <div className="p-5 pt-0 border-t border-neutral-100 flex justify-between items-center text-xs font-mono font-bold">
+                    <span className="text-[#2D6A4F] text-[11px] uppercase tracking-wider">
+                      CAMPUS EVENT
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveGalleryEvent(ev);
+                        setActivePhotoIdx(0);
+                      }}
+                      className="inline-flex items-center gap-1.5 bg-[#52B788] hover:bg-[#2D6A4F] text-[#122818] hover:text-white px-3 py-1.5 border-2 border-[#122818] shadow-[2px_2px_0px_#122818] hover:translate-x-0.5 hover:translate-y-0.5 transition-all cursor-pointer font-mono font-bold text-xs uppercase"
+                    >
+                      <span>📸 View Gallery</span>
+                      <span className="bg-[#122818] text-[#D8F3DC] text-[9px] px-1.5 py-0.5 rounded-none font-bold">
+                        {photoCount}
+                      </span>
+                    </button>
                   </div>
                 </div>
-                <div className="p-5 pt-0 border-t border-neutral-100 flex justify-between items-center text-xs font-mono font-bold">
-                  <span className="text-[#2D6A4F]">CAMPUS ACTIVITY</span>
-                  <a href="#admissions" className="underline decoration-2 text-[#122818]">Gallery Archive →</a>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
@@ -905,7 +1075,7 @@ export default function App() {
           <span className="text-xs font-mono font-bold uppercase text-[#2D6A4F] tracking-widest block mb-2">
             [ 05 — ADMISSIONS PROCESS ]
           </span>
-          <h3 className="text-3xl md:text-5xl font-extrabold tracking-tight">Join OP Nawaz Public School</h3>
+          <h3 className="text-3xl md:text-5xl font-extrabold tracking-tight">Join Opinawaz Universal Public School</h3>
           <p className="text-neutral-600 text-sm mt-2 max-w-xl">A straightforward, transparent admission workflow for prospective students and guardians.</p>
         </div>
 
@@ -1196,7 +1366,7 @@ export default function App() {
             </div>
             <div className="w-full h-[380px] sm:h-[460px] relative bg-neutral-100">
               <iframe
-                title="OP Nawaz Public School Official Location Map"
+                title="Opinawaz Universal Public School Official Location Map"
                 src="https://maps.google.com/maps?q=33.6450395,75.018005+(Opinawaz+Universal+Public+School)&t=&z=16&ie=UTF8&iwloc=&output=embed"
                 className="w-full h-full border-0"
                 loading="lazy"
@@ -1213,7 +1383,7 @@ export default function App() {
               </span>
 
               <h4 className="font-extrabold text-xl mb-3 leading-snug">
-                OP Nawaz Public School
+                Opinawaz Universal Public School
               </h4>
 
               <div className="space-y-4 text-xs font-mono text-neutral-800">
@@ -1279,11 +1449,11 @@ export default function App() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <img
-                src={schoolLogo}
-                alt="OP Nawaz Public School Logo"
-                className="w-10 h-10 object-contain rounded border-2 border-white bg-white p-0.5"
+                src={nobgLogo}
+                alt="Opinawaz Universal Public School Logo"
+                className="h-12 w-auto object-contain drop-shadow"
               />
-              <span className="font-extrabold text-lg tracking-tight text-white uppercase">OP Nawaz Public School</span>
+              <span className="font-extrabold text-base sm:text-lg tracking-tight text-white uppercase">Opinawaz Universal Public School</span>
             </div>
             <p className="text-xs text-[#95D5B2] leading-relaxed max-w-md font-mono mb-4">
               Committed to providing an inspiring learning journey in Kulgam. Dedicated to nurturing disciplined, self-confident, and intellectually curious young individuals.
@@ -1425,11 +1595,147 @@ export default function App() {
             onClick={handleCopyrightClick}
             className="cursor-default select-none"
           >
-            © 2026 OP Nawaz Public School, Kulgam. All rights reserved.
+            © 2026 Opinawaz Universal Public School, Kulgam. All rights reserved.
           </span>
           <span>Official Public Institutional Website</span>
         </div>
       </footer>
+
+      {/* Pop-Up Event Gallery Lightbox Modal */}
+      {activeGalleryEvent && (
+        <div
+          className="fixed inset-0 z-[100] bg-[#122818]/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-6"
+          onClick={() => setActiveGalleryEvent(null)}
+        >
+          <div
+            className="bg-[#F7F9F5] border-4 border-[#122818] shadow-[8px_8px_0px_#52B788] max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col font-mono"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="bg-[#122818] text-white p-3 sm:p-4 flex items-center justify-between border-b-2 border-[#122818] gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="bg-[#52B788] text-[#122818] text-[10px] font-bold px-2 py-0.5 border border-[#122818] uppercase flex-shrink-0">
+                  {activeGalleryEvent.category || "EVENT"}
+                </span>
+                <h3 className="font-extrabold text-sm sm:text-base uppercase tracking-tight truncate text-[#D8F3DC]">
+                  {activeGalleryEvent.title}
+                </h3>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <span className="text-[11px] text-[#95D5B2] hidden sm:inline font-bold">
+                  {activeGalleryEvent.date}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setActiveGalleryEvent(null)}
+                  className="bg-white hover:bg-red-500 hover:text-white text-[#122818] border-2 border-[#122818] w-8 h-8 flex items-center justify-center font-black text-sm shadow-[2px_2px_0px_#122818] cursor-pointer transition-colors"
+                  title="Close Gallery (Esc)"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Active High-Res Photo with Left/Right arrows */}
+            {(() => {
+              const photos = (activeGalleryEvent.gallery && activeGalleryEvent.gallery.length > 0)
+                ? activeGalleryEvent.gallery
+                : [activeGalleryEvent.img].filter(Boolean);
+              const currentPhoto = photos[activePhotoIdx] || photos[0];
+
+              return (
+                <div className="p-4 sm:p-6 overflow-y-auto flex flex-col gap-4">
+                  {/* Photo Canvas Container */}
+                  <div className="relative w-full aspect-video sm:h-[440px] bg-black border-2 border-[#122818] shadow-[4px_4px_0px_#122818] overflow-hidden flex items-center justify-center group select-none">
+                    <img
+                      src={currentPhoto}
+                      alt={`${activeGalleryEvent.title} - Photo ${activePhotoIdx + 1}`}
+                      className="w-full h-full object-contain"
+                    />
+
+                    {/* Left Navigation Arrow */}
+                    {photos.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActivePhotoIdx((prev) => (prev - 1 + photos.length) % photos.length);
+                        }}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-[#52B788] text-[#122818] border-2 border-[#122818] w-10 h-10 flex items-center justify-center font-black text-base shadow-[2px_2px_0px_#122818] cursor-pointer transition-all hover:scale-110"
+                        title="Previous Photo (Left Arrow)"
+                      >
+                        ◀
+                      </button>
+                    )}
+
+                    {/* Right Navigation Arrow */}
+                    {photos.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setActivePhotoIdx((prev) => (prev + 1) % photos.length);
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-[#52B788] text-[#122818] border-2 border-[#122818] w-10 h-10 flex items-center justify-center font-black text-base shadow-[2px_2px_0px_#122818] cursor-pointer transition-all hover:scale-110"
+                        title="Next Photo (Right Arrow)"
+                      >
+                        ▶
+                      </button>
+                    )}
+
+                    {/* Counter Badge */}
+                    <span className="absolute bottom-3 right-3 bg-[#122818]/90 text-white font-mono text-[11px] font-bold px-2.5 py-1 border border-white shadow-[2px_2px_0px_#52B788]">
+                      PHOTO {activePhotoIdx + 1} OF {photos.length}
+                    </span>
+                  </div>
+
+                  {/* Thumbnail Strip */}
+                  {photos.length > 1 && (
+                    <div>
+                      <span className="text-[10px] font-bold uppercase text-neutral-600 block mb-1.5">
+                        ALBUM GALLERY ({photos.length} PHOTOS) — CLICK TO SWITCH:
+                      </span>
+                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                        {photos.map((pUrl, pIdx) => (
+                          <button
+                            key={pIdx}
+                            type="button"
+                            onClick={() => setActivePhotoIdx(pIdx)}
+                            className={`relative flex-shrink-0 w-20 h-14 border-2 overflow-hidden cursor-pointer transition-all ${
+                              pIdx === activePhotoIdx
+                                ? "border-[#2D6A4F] shadow-[2px_2px_0px_#52B788] scale-105"
+                                : "border-[#122818] opacity-60 hover:opacity-100"
+                            }`}
+                          >
+                            <img
+                              src={pUrl}
+                              alt={`Thumbnail ${pIdx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <span className="absolute bottom-0 right-0 bg-[#122818] text-white text-[8px] font-mono px-1">
+                              0{pIdx + 1}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description Box */}
+                  <div className="bg-white border-2 border-[#122818] p-3 sm:p-4 text-xs font-sans text-neutral-800 leading-relaxed shadow-[2px_2px_0px_#122818]">
+                    <div className="flex items-center gap-2 mb-1 text-[10px] font-mono font-bold text-[#2D6A4F] uppercase">
+                      <span>📌 EVENT SUMMARY</span>
+                      <span>•</span>
+                      <span>{activeGalleryEvent.date}</span>
+                    </div>
+                    <p>{activeGalleryEvent.desc}</p>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

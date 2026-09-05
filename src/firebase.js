@@ -1,4 +1,4 @@
-// Google Firebase (Cloud Firestore) Integration for OP Nawaz Public School
+// Google Firebase (Cloud Firestore) Integration for Opinawaz Universal Public School
 // Uses official Google Firebase modular SDK v10 via ES Module imports
 
 import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js';
@@ -303,6 +303,25 @@ export function subscribeToContactInfo(onData, onError) {
   }
 }
 
+export function subscribeToHeroSlides(onData, onError) {
+  if (!db) return () => {};
+  try {
+    const colRef = collection(db, 'heroSlides');
+    return onSnapshot(colRef, (snapshot) => {
+      const items = [];
+      snapshot.forEach((d) => items.push({ ...d.data(), _docId: d.id }));
+      items.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+      onData(items);
+    }, (err) => {
+      console.warn("[Firebase] HeroSlides subscriber notice:", err.message);
+      if (onError) onError(err);
+    });
+  } catch (e) {
+    console.warn("[Firebase] subscribeToHeroSlides error:", e);
+    return () => {};
+  }
+}
+
 // -----------------------------------------------------------------------------
 // FIRESTORE MUTATION FUNCTIONS
 // -----------------------------------------------------------------------------
@@ -462,6 +481,42 @@ export async function saveContactInfoDoc(contactData) {
   }
 }
 
+export async function saveHeroSlideDoc(slide, idx = 0) {
+  if (!db) return;
+  try {
+    const docId = slide.id || `slide_${idx + 1}`;
+    const docRef = doc(db, 'heroSlides', docId);
+    await setDoc(docRef, { ...slide, id: docId, order: idx, updatedAt: serverTimestamp() });
+  } catch (err) {
+    console.error("[Firebase] saveHeroSlideDoc error:", err);
+    throw err;
+  }
+}
+
+export async function deleteHeroSlideDoc(slideId) {
+  if (!db) return;
+  try {
+    await deleteDoc(doc(db, 'heroSlides', slideId));
+  } catch (err) {
+    console.error("[Firebase] deleteHeroSlideDoc error:", err);
+    throw err;
+  }
+}
+
+export async function saveAllHeroSlidesDoc(slides) {
+  if (!db) return;
+  try {
+    const docRef = doc(db, 'settings', 'heroSlides');
+    await setDoc(docRef, { slides, updatedAt: serverTimestamp() });
+    for (let i = 0; i < slides.length; i++) {
+      await saveHeroSlideDoc(slides[i], i);
+    }
+  } catch (err) {
+    console.error("[Firebase] saveAllHeroSlidesDoc error:", err);
+    throw err;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // ONE-CLICK CLOUD SEEDER: POPULATES STANDARD SCHOOL DATA TO FIRESTORE
 // -----------------------------------------------------------------------------
@@ -472,13 +527,14 @@ export async function seedInitialDataToFirestore({
   activities = [],
   faqs = [],
   emergencyBanner = {},
-  contactInfo = {}
+  contactInfo = {},
+  heroSlides = []
 }) {
   if (!db) {
     throw new Error("Firestore is not initialized. Please verify your Firebase project credentials.");
   }
 
-  console.info("[Firebase] Seeding initial OP Nawaz school data to Cloud Firestore...");
+  console.info("[Firebase] Seeding initial Opinawaz Universal Public School data to Cloud Firestore...");
 
   // 1. Seed Inquiries
   for (const inq of inquiries) {
@@ -511,6 +567,11 @@ export async function seedInitialDataToFirestore({
   // 7. Seed Contact & Socials Info
   if (contactInfo && Object.keys(contactInfo).length > 0) {
     await saveContactInfoDoc(contactInfo);
+  }
+
+  // 8. Seed Hero Slides
+  if (heroSlides && heroSlides.length > 0) {
+    await saveAllHeroSlidesDoc(heroSlides);
   }
 
   console.info("[Firebase] Seeding completed successfully!");

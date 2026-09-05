@@ -1,4 +1,4 @@
-# NeoBrutal React Starter (opnawaz-neobrutalweb)
+# Opinawaz Universal Public School — Official Website (opnawaz-neobrutalweb)
 
 A high-performance, opinionated base React application built with **Vite** and styled with a modern **Neo-Brutalist** design aesthetic.
 

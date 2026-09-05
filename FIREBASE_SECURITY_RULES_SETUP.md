@@ -1,6 +1,6 @@
 # 🛡️ Firebase Security Rules & Admin Access Guide
 
-This guide explains how admin authorization works for **OP Nawaz High School** and **where to add new authorized emails in the future**.
+This guide explains how admin authorization works for **Opinawaz Universal Public School** and **where to add new authorized emails in the future**.
 
 ---
 

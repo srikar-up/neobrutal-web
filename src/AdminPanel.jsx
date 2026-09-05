@@ -3,6 +3,7 @@ import { getCroppedImageStyle, getTopperImageStyle } from './imageHelper';
 
 export default function AdminPanel({
   schoolLogo,
+  nobgLogo,
   inquiries = [],
   setInquiries,
   announcements = [],
@@ -18,6 +19,11 @@ export default function AdminPanel({
   contactInfo = {},
   setContactInfo,
   saveContactInfoDoc,
+  heroSlides = [],
+  setHeroSlides,
+  saveHeroSlideDoc,
+  deleteHeroSlideDoc,
+  saveAllHeroSlidesDoc,
   onBackToWebsite,
   // Firebase Cloud Sync Props
   isFirebaseConnected = false,
@@ -151,16 +157,27 @@ export default function AdminPanel({
     category: 'SPORTS',
     desc: '',
     img: defaultActivityImg,
+    gallery: [defaultActivityImg],
     focalX: 50,
     focalY: 50,
     zoom: 1.0
   });
   const [editingActivityIdx, setEditingActivityIdx] = useState(null);
+  const [newGalleryPhotoUrl, setNewGalleryPhotoUrl] = useState('');
 
   // 4. FAQ Form State
   const [newFaq, setNewFaq] = useState({ q: '', a: '' });
   const [editingFaqIdx, setEditingFaqIdx] = useState(null);
   const [previewFaqOpen, setPreviewFaqOpen] = useState(0);
+
+  // 5. Hero Slideshow Form State
+  const defaultSlideImg = 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1920&q=80';
+  const [newSlide, setNewSlide] = useState({
+    url: defaultSlideImg,
+    label: 'MAIN CAMPUS & ADMINISTRATIVE BLOCK — KULGAM'
+  });
+  const [editingSlideIdx, setEditingSlideIdx] = useState(null);
+  const [slideFeedback, setSlideFeedback] = useState(null);
 
   // Authentication Handlers (Google Sign In with Firestore Security Rule Verification)
   const handleGoogleSignIn = async () => {
@@ -339,6 +356,39 @@ export default function AdminPanel({
   };
 
   // --- ACTIVITIES / RECENT PROGRAMMES HANDLERS ---
+  const handleAddPhotoToActivity = (photoUrl) => {
+    const url = (photoUrl || newGalleryPhotoUrl).trim();
+    if (!url) return;
+    setNewActivity(prev => {
+      const existing = prev.gallery || (prev.img ? [prev.img] : []);
+      if (existing.includes(url)) return prev;
+      return {
+        ...prev,
+        gallery: [...existing, url]
+      };
+    });
+    setNewGalleryPhotoUrl('');
+  };
+
+  const handleRemovePhotoFromActivity = (photoIdx) => {
+    setNewActivity(prev => {
+      const existing = prev.gallery || (prev.img ? [prev.img] : []);
+      const updated = existing.filter((_, i) => i !== photoIdx);
+      return {
+        ...prev,
+        gallery: updated,
+        img: (prev.img === existing[photoIdx] && updated.length > 0) ? updated[0] : prev.img
+      };
+    });
+  };
+
+  const handleSetActivityCoverPhoto = (photoUrl) => {
+    setNewActivity(prev => ({
+      ...prev,
+      img: photoUrl
+    }));
+  };
+
   const handleSaveActivity = (e) => {
     e.preventDefault();
     if (!newActivity.title || !newActivity.desc) return;
@@ -348,6 +398,9 @@ export default function AdminPanel({
       category: newActivity.category || "SPORTS",
       desc: newActivity.desc.trim(),
       img: newActivity.img?.trim() || defaultActivityImg,
+      gallery: (newActivity.gallery && newActivity.gallery.length > 0)
+        ? newActivity.gallery
+        : [newActivity.img?.trim() || defaultActivityImg],
       focalX: Number(newActivity.focalX) !== undefined ? Number(newActivity.focalX) : 50,
       focalY: Number(newActivity.focalY) !== undefined ? Number(newActivity.focalY) : 50,
       zoom: Number(newActivity.zoom) || 1.0
@@ -371,10 +424,12 @@ export default function AdminPanel({
       category: 'SPORTS',
       desc: '',
       img: defaultActivityImg,
+      gallery: [defaultActivityImg],
       focalX: 50,
       focalY: 50,
       zoom: 1.0
     });
+    setNewGalleryPhotoUrl('');
   };
 
   const handleEditActivity = (idx) => {
@@ -385,6 +440,7 @@ export default function AdminPanel({
       category: a.category || 'SPORTS',
       desc: a.desc || '',
       img: a.img || defaultActivityImg,
+      gallery: a.gallery ? [...a.gallery] : (a.img ? [a.img] : [defaultActivityImg]),
       focalX: a.focalX !== undefined ? a.focalX : 50,
       focalY: a.focalY !== undefined ? a.focalY : 50,
       zoom: a.zoom !== undefined ? a.zoom : 1.0
@@ -498,6 +554,142 @@ export default function AdminPanel({
     }
   };
 
+  // --- HERO SLIDESHOW HANDLERS & PRESETS ---
+  const heroPresets = [
+    {
+      title: "Campus Block",
+      url: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1920&q=80",
+      label: "MAIN CAMPUS & ADMINISTRATIVE BLOCK — KULGAM"
+    },
+    {
+      title: "Smart Classroom",
+      url: "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1920&q=80",
+      label: "ACTIVE CLASSROOM LEARNING & INTERACTION"
+    },
+    {
+      title: "Science & Computer Lab",
+      url: "https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&w=1920&q=80",
+      label: "MODERN SCIENCE & COMPUTER LABS"
+    },
+    {
+      title: "Central Library",
+      url: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1920&q=80",
+      label: "CENTRAL KNOWLEDGE LIBRARY & READING CORRIDORS"
+    },
+    {
+      title: "Sports Grounds",
+      url: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1920&q=80",
+      label: "OUTDOOR SPORTS COMPLEX & ATHLETIC TRAINING"
+    },
+    {
+      title: "Morning Assembly",
+      url: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1920&q=80",
+      label: "STUDENT MORNING ASSEMBLY & CULTURAL PROGRAMMES"
+    }
+  ];
+
+  const handleSaveHeroSlide = (e) => {
+    e.preventDefault();
+    if (!newSlide.url || !newSlide.label) return;
+    const slideItem = {
+      id: editingSlideIdx !== null ? (heroSlides[editingSlideIdx]?.id || `slide-${Date.now()}`) : `slide-${Date.now()}`,
+      url: newSlide.url.trim(),
+      label: newSlide.label.trim().toUpperCase()
+    };
+
+    let updatedSlides = [];
+    if (editingSlideIdx !== null) {
+      updatedSlides = heroSlides.map((s, idx) => idx === editingSlideIdx ? slideItem : s);
+      setEditingSlideIdx(null);
+    } else {
+      updatedSlides = [...heroSlides, slideItem];
+    }
+
+    setHeroSlides(updatedSlides);
+    try {
+      localStorage.setItem('opnawaz_hero_slides', JSON.stringify(updatedSlides));
+    } catch (err) {}
+
+    if (saveAllHeroSlidesDoc) {
+      saveAllHeroSlidesDoc(updatedSlides).catch(e => console.warn("[Firebase] Hero slide save warning:", e));
+    }
+
+    setNewSlide({
+      url: heroPresets[0].url,
+      label: heroPresets[0].label
+    });
+    setSlideFeedback({ type: 'success', msg: '✓ Hero slide saved and updated live on the website!' });
+    setTimeout(() => setSlideFeedback(null), 3500);
+  };
+
+  const handleEditHeroSlide = (idx) => {
+    const s = heroSlides[idx];
+    if (!s) return;
+    setNewSlide({
+      url: s.url || '',
+      label: s.label || ''
+    });
+    setEditingSlideIdx(idx);
+    window.scrollTo({ top: 380, behavior: 'smooth' });
+  };
+
+  const handleDeleteHeroSlide = (idx) => {
+    if (heroSlides.length <= 1) {
+      alert("At least one hero slide must remain active in the slideshow.");
+      return;
+    }
+    const slideToDelete = heroSlides[idx];
+    const updated = heroSlides.filter((_, i) => i !== idx);
+    setHeroSlides(updated);
+    try {
+      localStorage.setItem('opnawaz_hero_slides', JSON.stringify(updated));
+    } catch (err) {}
+
+    if (deleteHeroSlideDoc && slideToDelete?.id) {
+      deleteHeroSlideDoc(slideToDelete.id).catch(e => console.warn("[Firebase] Hero slide delete warning:", e));
+    }
+    if (saveAllHeroSlidesDoc) {
+      saveAllHeroSlidesDoc(updated).catch(e => console.warn("[Firebase] Hero slide sync warning:", e));
+    }
+
+    if (editingSlideIdx === idx) {
+      setEditingSlideIdx(null);
+      setNewSlide({ url: defaultSlideImg, label: 'MAIN CAMPUS & ADMINISTRATIVE BLOCK — KULGAM' });
+    }
+    setSlideFeedback({ type: 'success', msg: '✓ Slide removed from hero slideshow.' });
+    setTimeout(() => setSlideFeedback(null), 3000);
+  };
+
+  const handleMoveHeroSlide = (idx, direction) => {
+    const targetIdx = idx + direction;
+    if (targetIdx < 0 || targetIdx >= heroSlides.length) return;
+    const copy = [...heroSlides];
+    const temp = copy[idx];
+    copy[idx] = copy[targetIdx];
+    copy[targetIdx] = temp;
+    setHeroSlides(copy);
+    try {
+      localStorage.setItem('opnawaz_hero_slides', JSON.stringify(copy));
+    } catch (err) {}
+    if (saveAllHeroSlidesDoc) {
+      saveAllHeroSlidesDoc(copy).catch(e => console.warn("[Firebase] Hero slide reorder warning:", e));
+    }
+  };
+
+  const handleResetHeroSlides = () => {
+    if (initialTemplates?.heroSlides) {
+      setHeroSlides(initialTemplates.heroSlides);
+      try {
+        localStorage.setItem('opnawaz_hero_slides', JSON.stringify(initialTemplates.heroSlides));
+      } catch (err) {}
+      if (saveAllHeroSlidesDoc) {
+        saveAllHeroSlidesDoc(initialTemplates.heroSlides).catch(e => console.warn("[Firebase] Hero slide reset warning:", e));
+      }
+      setSlideFeedback({ type: 'success', msg: '✓ Hero slides reset to default initial templates!' });
+      setTimeout(() => setSlideFeedback(null), 3500);
+    }
+  };
+
   // --- GOOGLE SIGN IN SCREEN ---
   if (!isAuthenticated) {
     return (
@@ -507,11 +699,11 @@ export default function AdminPanel({
           <div className="flex items-center gap-3">
             <img
               src={schoolLogo}
-              alt="OP Nawaz Logo"
+              alt="Opinawaz Universal Public School Logo"
               className="w-10 h-10 object-contain rounded border-2 border-white bg-white p-0.5"
             />
             <div>
-              <h2 className="font-extrabold text-sm sm:text-base uppercase tracking-tight">OP Nawaz Public School</h2>
+              <h2 className="font-extrabold text-sm sm:text-base uppercase tracking-tight">Opinawaz Universal Public School</h2>
               <p className="text-[10px] text-[#95D5B2] uppercase">Administrative Access Gateway // Kulgam</p>
             </div>
           </div>
@@ -602,7 +794,7 @@ export default function AdminPanel({
 
         {/* Footer */}
         <div className="border-t border-white/20 p-4 text-center text-xs text-neutral-400">
-          OP Nawaz Public School, Karewa, Kulgam • Protected Administrative System
+          Opinawaz Universal Public School, Karewa, Kulgam • Protected Administrative System
         </div>
       </div>
     );
@@ -617,7 +809,7 @@ export default function AdminPanel({
           <div className="flex items-center gap-3">
             <img
               src={schoolLogo}
-              alt="OP Nawaz Logo"
+              alt="Opinawaz Universal Public School Logo"
               className="w-10 h-10 object-contain rounded border-2 border-white bg-white p-0.5"
             />
             <div>
@@ -628,7 +820,7 @@ export default function AdminPanel({
                 <span className="text-[10px] text-neutral-400">RESTRICTED CONSOLE</span>
               </div>
               <h1 className="font-extrabold text-base md:text-lg uppercase tracking-tight text-white">
-                OP Nawaz Public School — Administration Portal
+                Opinawaz Universal Public School — Administration Portal
               </h1>
             </div>
           </div>
@@ -822,6 +1014,14 @@ export default function AdminPanel({
             }`}
           >
             🏢 Contact & Socials
+          </button>
+          <button
+            onClick={() => setActiveTab('SLIDES')}
+            className={`px-3.5 py-2 border-2 border-[#122818] shadow-[2px_2px_0px_#122818] transition-all cursor-pointer uppercase ${
+              activeTab === 'SLIDES' ? 'bg-[#52B788] text-[#122818]' : 'bg-white text-neutral-700 hover:bg-[#E9EFE6]'
+            }`}
+          >
+            🖼️ Hero Slideshow ({heroSlides?.length || 0})
           </button>
         </div>
 
@@ -1846,6 +2046,134 @@ export default function AdminPanel({
                 </div>
               </div>
 
+              {/* Event Photo Gallery (Multi-Photo Album) */}
+              <div className="p-4 bg-white border-2 border-[#122818] shadow-[3px_3px_0px_#122818] space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-[#122818] pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📸</span>
+                    <div>
+                      <h4 className="font-extrabold text-xs uppercase text-[#122818]">
+                        Event Photo Gallery Album (Pop-Up Lightbox Photos)
+                      </h4>
+                      <p className="text-[11px] text-neutral-600">
+                        Add multiple photos for this event. Visitors can view all photos in a full-screen pop-up gallery on the public website.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="bg-[#D8F3DC] text-[#122818] text-[10px] font-bold px-2 py-1 border border-[#122818] self-start sm:self-auto">
+                    {(newActivity.gallery || []).length} Photos In Album
+                  </span>
+                </div>
+
+                {/* Add Photo Input */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="url"
+                    placeholder="Paste photo direct image URL (https://...)"
+                    value={newGalleryPhotoUrl}
+                    onChange={(e) => setNewGalleryPhotoUrl(e.target.value)}
+                    className="flex-1 bg-[#F7F9F5] border-2 border-[#122818] p-2 text-xs font-mono focus:bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddPhotoToActivity(newGalleryPhotoUrl)}
+                    className="bg-[#52B788] hover:bg-[#2D6A4F] text-[#122818] hover:text-white px-4 py-2 text-xs font-bold uppercase border-2 border-[#122818] shadow-[2px_2px_0px_#122818] cursor-pointer whitespace-nowrap"
+                  >
+                    + Add to Gallery
+                  </button>
+                </div>
+
+                {/* Gallery Presets for Quick Adding */}
+                <div className="flex flex-wrap items-center gap-2 pt-1 text-[10px]">
+                  <span className="font-bold text-neutral-500 uppercase">⚡ Quick Add Presets:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleAddPhotoToActivity("https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80")}
+                    className="bg-[#E9EFE6] hover:bg-[#D8F3DC] text-[#122818] border border-[#122818] px-2 py-0.5 cursor-pointer font-bold"
+                  >
+                    + Sports Match
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddPhotoToActivity("https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=80")}
+                    className="bg-[#E9EFE6] hover:bg-[#D8F3DC] text-[#122818] border border-[#122818] px-2 py-0.5 cursor-pointer font-bold"
+                  >
+                    + Athletic Field
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddPhotoToActivity("https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?auto=format&fit=crop&w=1200&q=80")}
+                    className="bg-[#E9EFE6] hover:bg-[#D8F3DC] text-[#122818] border border-[#122818] px-2 py-0.5 cursor-pointer font-bold"
+                  >
+                    + Science Project
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleAddPhotoToActivity("https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80")}
+                    className="bg-[#E9EFE6] hover:bg-[#D8F3DC] text-[#122818] border border-[#122818] px-2 py-0.5 cursor-pointer font-bold"
+                  >
+                    + Cultural Event
+                  </button>
+                </div>
+
+                {/* Thumbnails of Current Gallery Photos */}
+                {(newActivity.gallery && newActivity.gallery.length > 0) ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 pt-2">
+                    {newActivity.gallery.map((pUrl, pIdx) => (
+                      <div
+                        key={pIdx}
+                        className={`relative border-2 ${
+                          pUrl === newActivity.img ? 'border-[#2D6A4F] ring-2 ring-[#52B788]' : 'border-[#122818]'
+                        } bg-neutral-100 overflow-hidden group`}
+                      >
+                        <div className="aspect-video w-full overflow-hidden">
+                          <img
+                            src={pUrl}
+                            alt={`Gallery photo ${pIdx + 1}`}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.target.src = defaultActivityImg; }}
+                          />
+                        </div>
+                        {pUrl === newActivity.img && (
+                          <span className="absolute top-1 left-1 bg-[#52B788] text-[#122818] text-[8px] font-black px-1 border border-[#122818]">
+                            COVER
+                          </span>
+                        )}
+                        <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[8px] font-mono px-1">
+                          #{pIdx + 1}
+                        </span>
+                        <div className="p-1 bg-white border-t border-neutral-200 flex gap-1 justify-between">
+                          {pUrl !== newActivity.img ? (
+                            <button
+                              type="button"
+                              onClick={() => handleSetActivityCoverPhoto(pUrl)}
+                              className="text-[9px] font-bold text-[#2D6A4F] hover:underline"
+                              title="Set as Main Cover"
+                            >
+                              ★ Cover
+                            </button>
+                          ) : (
+                            <span className="text-[9px] text-neutral-400">Main</span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemovePhotoFromActivity(pIdx)}
+                            className="text-[9px] font-bold text-red-600 hover:underline"
+                            title="Remove Photo"
+                          >
+                            ✕ Del
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-[#F7F9F5] border border-neutral-300 text-neutral-500 text-xs font-mono">
+                    ℹ️ Only the main cover photo is currently set. Add more photo links above to create a multi-image gallery album for this event.
+                  </div>
+                )}
+              </div>
+
               <button
                 type="submit"
                 className="bg-[#52B788] hover:bg-[#2D6A4F] text-[#122818] hover:text-white font-bold py-2.5 px-6 uppercase border-2 border-[#122818] shadow-[3px_3px_0px_#122818] cursor-pointer text-xs"
@@ -1876,6 +2204,11 @@ export default function AdminPanel({
                         </span>
                       </div>
                       <div className="p-4">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-[10px] font-mono font-bold bg-[#D8F3DC] text-[#122818] px-1.5 py-0.5 border border-[#122818]">
+                            📸 {ev.gallery?.length || 1} Photos
+                          </span>
+                        </div>
                         <h5 className="font-extrabold text-sm text-[#122818] mb-2 leading-snug">{ev.title}</h5>
                         <p className="text-xs text-neutral-600 line-clamp-3 leading-relaxed font-sans">{ev.desc}</p>
                       </div>
@@ -2314,11 +2647,284 @@ export default function AdminPanel({
             </form>
           </div>
         )}
+
+        {/* ========================================================= */}
+        {/* TAB 8: HERO SLIDESHOW IMAGERY & CAROUSEL */}
+        {/* ========================================================= */}
+        {activeTab === 'SLIDES' && (
+          <div className="space-y-6">
+            {/* Feedback Banner */}
+            {slideFeedback && (
+              <div className="p-3 bg-[#D8F3DC] border-2 border-[#122818] text-[#122818] font-bold text-xs shadow-[3px_3px_0px_#122818] flex items-center justify-between">
+                <span>{slideFeedback.msg}</span>
+                <button
+                  onClick={() => setSlideFeedback(null)}
+                  className="text-xs font-bold text-neutral-600 hover:text-neutral-900 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Add/Edit Slide Form */}
+            <form onSubmit={handleSaveHeroSlide} className="bg-white border-2 border-[#122818] p-6 shadow-[5px_5px_0px_#122818] space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b-2 border-[#122818] pb-3">
+                <div>
+                  <h3 className="font-extrabold text-base uppercase text-[#122818]">
+                    {editingSlideIdx !== null ? `Edit Hero Slide (#${editingSlideIdx + 1})` : "Add New Hero Slideshow Image"}
+                  </h3>
+                  <p className="text-xs text-neutral-600">
+                    Control full-width background photographs and captions displayed on the public homepage hero section.
+                  </p>
+                </div>
+                {editingSlideIdx !== null && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingSlideIdx(null);
+                      setNewSlide({
+                        url: heroPresets[0].url,
+                        label: heroPresets[0].label
+                      });
+                    }}
+                    className="text-xs font-bold text-neutral-700 underline cursor-pointer self-start sm:self-auto"
+                  >
+                    ✕ Cancel Edit Mode
+                  </button>
+                )}
+              </div>
+
+              {/* Quick Presets Selector */}
+              <div>
+                <label className="block text-[10px] font-bold uppercase text-[#2D6A4F] mb-1.5">
+                  ⚡ 1-Click Educational Photo Presets (Click to autofill)
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {heroPresets.map((preset, pIdx) => (
+                    <button
+                      key={pIdx}
+                      type="button"
+                      onClick={() => setNewSlide({ url: preset.url, label: preset.label })}
+                      className="text-[11px] font-mono font-bold bg-[#E9EFE6] hover:bg-[#52B788] hover:text-[#122818] text-neutral-800 px-2.5 py-1 border border-[#122818] shadow-[1px_1px_0px_#122818] cursor-pointer transition-colors"
+                    >
+                      {preset.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Inputs Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-5 text-xs">
+                <div className="md:col-span-7 space-y-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase mb-1">
+                      Hero Image Direct URL *
+                    </label>
+                    <input
+                      type="url"
+                      required
+                      placeholder="https://images.unsplash.com/... or https://domain.com/photo.jpg"
+                      value={newSlide.url}
+                      onChange={(e) => setNewSlide({ ...newSlide, url: e.target.value })}
+                      className="w-full bg-[#F7F9F5] border-2 border-[#122818] p-2.5 font-mono text-xs focus:bg-white"
+                    />
+                    <span className="text-[10px] text-neutral-500 mt-1 block">
+                      Recommended: High resolution landscape image (1920×1080 or wider).
+                    </span>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase mb-1">
+                      Slide Label / Tagline *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g., MAIN CAMPUS & ADMINISTRATIVE BLOCK — KULGAM"
+                      value={newSlide.label}
+                      onChange={(e) => setNewSlide({ ...newSlide, label: e.target.value })}
+                      className="w-full bg-[#F7F9F5] border-2 border-[#122818] p-2.5 font-mono text-xs focus:bg-white uppercase font-bold"
+                    />
+                    <span className="text-[10px] text-neutral-500 mt-1 block">
+                      Displayed on the bottom strip of the homepage hero banner.
+                    </span>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="submit"
+                      className="bg-[#52B788] hover:bg-[#2D6A4F] text-[#122818] hover:text-white font-bold py-2.5 px-6 uppercase border-2 border-[#122818] shadow-[3px_3px_0px_#122818] text-xs transition-all cursor-pointer"
+                    >
+                      💾 {editingSlideIdx !== null ? 'Save Slide Updates' : 'Add Slide to Carousel'}
+                    </button>
+                    {editingSlideIdx !== null && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingSlideIdx(null);
+                          setNewSlide({
+                            url: heroPresets[0].url,
+                            label: heroPresets[0].label
+                          });
+                        }}
+                        className="bg-neutral-200 hover:bg-neutral-300 text-[#122818] font-bold py-2.5 px-4 uppercase border-2 border-[#122818] text-xs transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Live Mockup Preview */}
+                <div className="md:col-span-5">
+                  <span className="block text-[10px] font-bold uppercase text-[#2D6A4F] mb-1">
+                    Live Banner Mockup
+                  </span>
+                  <div className="relative aspect-video bg-[#122818] border-2 border-[#122818] shadow-[3px_3px_0px_#122818] overflow-hidden flex flex-col justify-between p-3 text-white">
+                    {newSlide.url ? (
+                      <img
+                        src={newSlide.url}
+                        alt="Preview"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : null}
+                    <div className="absolute inset-0 bg-[#122818]/75"></div>
+
+                    <div className="relative z-10">
+                      <span className="inline-block bg-[#D8F3DC] text-[#122818] text-[8px] font-black px-1.5 py-0.5 border border-[#122818] uppercase">
+                        CAMPUS PREVIEW
+                      </span>
+                    </div>
+
+                    <div className="relative z-10 border-t border-white/20 pt-1.5 flex items-center justify-between text-[9px] font-mono">
+                      <span className="text-[#95D5B2] font-bold truncate">
+                        {newSlide.label || "SLIDE CAPTION"}
+                      </span>
+                      <span className="bg-[#52B788] text-[#122818] font-bold px-1 text-[8px]">
+                        0{editingSlideIdx !== null ? editingSlideIdx + 1 : heroSlides.length + 1}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            {/* List of Active Hero Slides */}
+            <div className="bg-white border-2 border-[#122818] p-6 shadow-[5px_5px_0px_#122818] space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-2 border-[#122818] pb-3">
+                <div>
+                  <h4 className="font-extrabold text-sm uppercase text-[#122818]">
+                    Active Slideshow Images ({heroSlides.length})
+                  </h4>
+                  <p className="text-xs text-neutral-600">
+                    Slides rotate automatically in sequential order. Use the up/down arrows to reorder.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResetHeroSlides}
+                  className="bg-[#E9EFE6] hover:bg-[#D8F3DC] text-[#122818] text-xs font-mono font-bold px-3 py-1.5 border border-[#122818] shadow-[2px_2px_0px_#122818] cursor-pointer transition-colors self-start sm:self-auto"
+                >
+                  ↺ Reset Defaults
+                </button>
+              </div>
+
+              {heroSlides.length === 0 ? (
+                <div className="text-center p-8 bg-[#F7F9F5] border-2 border-dashed border-neutral-300 text-neutral-500 font-mono text-xs">
+                  No hero slides found. Add your first hero slide above or click "Reset Defaults".
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {heroSlides.map((slide, idx) => (
+                    <div
+                      key={slide.id || idx}
+                      className={`border-2 border-[#122818] bg-[#F7F9F5] flex flex-col justify-between shadow-[3px_3px_0px_#122818] ${
+                        editingSlideIdx === idx ? 'ring-2 ring-[#52B788]' : ''
+                      }`}
+                    >
+                      <div>
+                        {/* Slide Top Bar */}
+                        <div className="bg-[#122818] text-white px-3 py-1.5 flex items-center justify-between text-[10px] font-mono border-b-2 border-[#122818]">
+                          <span className="font-bold text-[#52B788]">SLIDE 0{idx + 1}</span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => handleMoveHeroSlide(idx, -1)}
+                              className="px-1.5 py-0.5 bg-white/20 hover:bg-white hover:text-[#122818] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              title="Move Earlier"
+                            >
+                              ▲
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === heroSlides.length - 1}
+                              onClick={() => handleMoveHeroSlide(idx, 1)}
+                              className="px-1.5 py-0.5 bg-white/20 hover:bg-white hover:text-[#122818] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                              title="Move Later"
+                            >
+                              ▼
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Image Preview */}
+                        <div className="relative aspect-video bg-neutral-200 overflow-hidden border-b-2 border-[#122818]">
+                          <img
+                            src={slide.url}
+                            alt={slide.label}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.target.src = defaultSlideImg;
+                            }}
+                          />
+                        </div>
+
+                        {/* Caption info */}
+                        <div className="p-3">
+                          <p className="font-mono text-xs font-bold text-[#122818] uppercase leading-tight line-clamp-2">
+                            {slide.label}
+                          </p>
+                          <span className="text-[10px] font-mono text-neutral-500 block truncate mt-1">
+                            {slide.url}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="p-3 pt-0 flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEditHeroSlide(idx)}
+                          className="flex-1 bg-white hover:bg-[#D8F3DC] text-[#122818] text-[11px] font-mono font-bold py-1.5 border border-[#122818] shadow-[1px_1px_0px_#122818] cursor-pointer transition-colors text-center"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteHeroSlide(idx)}
+                          disabled={heroSlides.length <= 1}
+                          className="px-3 bg-red-100 hover:bg-red-200 text-red-700 disabled:opacity-40 disabled:cursor-not-allowed text-[11px] font-mono font-bold py-1.5 border border-[#122818] shadow-[1px_1px_0px_#122818] cursor-pointer transition-colors"
+                          title="Delete Slide"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Admin Footer */}
       <footer className="bg-[#122818] text-[#95D5B2] text-xs py-4 px-4 md:px-8 border-t-2 border-[#122818] text-center font-mono">
-        OP Nawaz Public School, Kulgam • Administrative Portal • Protected Session
+        Opinawaz Universal Public School, Kulgam • Administrative Portal • Protected Session
       </footer>
     </div>
   );
