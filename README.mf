@@ -1,5 +1,6 @@
 # 🏫 Opinawaz Universal Public School — Official Web Platform & Admin Portal
 
+[![Live Website](https://img.shields.io/badge/Live_Site-opinawaz.netlify.app-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://opinawaz.netlify.app/)
 [![React](https://img.shields.io/badge/React-18.3.1-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-5.4.2-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Firebase](https://img.shields.io/badge/Firebase-10.13.2-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com/)
@@ -11,8 +12,24 @@
 
 ---
 
+### 🌐 Live Official Site Preview
+
+> 🚀 **Live Production Deployment**: **[https://opinawaz.netlify.app/](https://opinawaz.netlify.app/)**  
+> *(Click the preview image below to visit the live website)*
+
+[![Opinawaz Universal Public School — Live Website Preview](./src/assets/screencapture-opinawaz-netlify-app-2026-09-05-14_34_13.png)](https://opinawaz.netlify.app/)
+
+<p align="center">
+  <a href="https://opinawaz.netlify.app/" target="_blank">
+    <strong>🔗 Click here to open the live website in a new tab: https://opinawaz.netlify.app/</strong>
+  </a>
+</p>
+
+---
+
 ## 📌 Table of Contents
 
+- [Live Preview](#-live-official-site-preview)
 - [Overview](#-overview)
 - [Design Language & Aesthetics](#-design-language--aesthetics)
 - [Key Features](#-key-features)
@@ -36,6 +53,9 @@
 ## 🌟 Overview
 
 **Opinawaz Universal Public School (opnawaz-neobrutalweb)** is a modern, full-featured institutional web application tailored to the operational and communicative needs of a premier educational institution in South Kashmir.
+
+- **Official Live Website**: [https://opinawaz.netlify.app/](https://opinawaz.netlify.app/)
+- **Campus Location**: Karewa, Kulgam, Jammu & Kashmir — 192231
 
 The application serves two primary roles:
 1. **Public Web Experience**: A clean, accessible, and fast-loading portal where parents, prospective students, and community members can explore academic wings, view board examination toppers, browse campus activities through photo galleries, submit admission inquiries, read circulars, and access school credentials.
@@ -81,7 +101,7 @@ The web platform features an opinionated **Neo-Brutalist** design system designe
 
 ### 2. Administrative Management Console
 
-Accessible via `#admin` or through a secret 7-click trigger on the copyright footer, the Admin Console provides full administrative control:
+Accessible via `/#admin` (e.g. [opinawaz.netlify.app/#admin](https://opinawaz.netlify.app/#admin)) or through a secret 7-click trigger on the copyright footer, the Admin Console provides full administrative control:
 
 | Tab | Feature | Description |
 |---|---|---|
@@ -130,6 +150,7 @@ graph TD
 | **Styling** | [Tailwind CSS](https://tailwindcss.com/) + Vanilla CSS | High-contrast Neo-Brutalist design tokens, utility classes, responsiveness |
 | **Database** | [Google Cloud Firestore](https://firebase.google.com/docs/firestore) | Real-time database listeners (`onSnapshot`) for notices, inquiries, toppers, and settings |
 | **Authentication** | [Firebase Auth](https://firebase.google.com/docs/auth) | Google OAuth popup authentication with institutional account verification |
+| **Hosting & Deployment** | [Netlify](https://www.netlify.com/) | Continuous deployment, automated builds, CDN edge distribution |
 | **Icons & Media** | SVG + Custom Assets | SVG icons, optimized institutional crests, and dynamic Unsplash fallback photography |
 | **Typography** | Google Fonts | Plus Jakarta Sans, Space Grotesk, Space Mono |
 
@@ -140,24 +161,25 @@ graph TD
 ```
 opnawaz neobrutalweb/
 ├── public/
-│   └── favicon.svg                      # Custom Neo-Brutalist browser favicon
+│   └── favicon.svg                                                # Custom Neo-Brutalist browser favicon
 ├── src/
 │   ├── assets/
-│   │   ├── nobglogo.png                 # Transparent high-resolution school logo
-│   │   └── opnawazlogo.jpeg             # Official school crest / insignia
-│   ├── AdminPanel.jsx                   # Full administrative console (CRM, Toppers, Notices, FAQs)
-│   ├── App.jsx                          # Main public website component & router
-│   ├── App.css                          # Application-specific layouts & transitions
-│   ├── firebase.js                      # Modular Firebase 10 SDK integration, Firestore CRUD & Auth
-│   ├── imageHelper.js                   # Universal focal point (focalX/focalY/zoom) crop math
-│   ├── index.css                        # Global CSS reset & typography classes
-│   └── main.jsx                         # React root mounting script
-├── .env.example                         # Template for Firebase environment credentials
-├── FIREBASE_SECURITY_RULES_SETUP.md     # In-depth guide on Firestore security rules & admin whitelisting
-├── index.html                           # Application shell, font imports & Tailwind config
-├── package.json                         # Node dependencies & npm scripts
-├── vite.config.js                       # Vite build configuration
-└── README.md                            # Comprehensive project documentation
+│   │   ├── nobglogo.png                                           # Transparent high-resolution school logo
+│   │   ├── opnawazlogo.jpeg                                       # Official school crest / insignia
+│   │   └── screencapture-opinawaz-netlify-app-2026-09-05-14_34_13.png # Full live site screenshot preview
+│   ├── AdminPanel.jsx                                             # Full administrative console (CRM, Toppers, Notices, FAQs)
+│   ├── App.jsx                                                    # Main public website component & router
+│   ├── App.css                                                    # Application-specific layouts & transitions
+│   ├── firebase.js                                                # Modular Firebase 10 SDK integration, Firestore CRUD & Auth
+│   ├── imageHelper.js                                             # Universal focal point (focalX/focalY/zoom) crop math
+│   ├── index.css                                                  # Global CSS reset & typography classes
+│   └── main.jsx                                                   # React root mounting script
+├── .env.example                                                   # Template for Firebase environment credentials
+├── FIREBASE_SECURITY_RULES_SETUP.md                               # In-depth guide on Firestore security rules & admin whitelisting
+├── index.html                                                     # Application shell, font imports & Tailwind config
+├── package.json                                                   # Node dependencies & npm scripts
+├── vite.config.js                                                 # Vite build configuration
+└── README.md                                                      # Comprehensive project documentation
 ```
 
 ---
@@ -307,7 +329,7 @@ For detailed security troubleshooting, see [`FIREBASE_SECURITY_RULES_SETUP.md`](
 
 There are two easy methods to enter the Administration Portal:
 
-1. **Direct Navigation**: Navigate to `/#admin` or `/admin` in your browser address bar.
+1. **Direct Navigation**: Navigate to [https://opinawaz.netlify.app/#admin](https://opinawaz.netlify.app/#admin) or `/#admin` in your browser address bar.
 2. **Secret Institutional Trigger**: On the public homepage, scroll down to the bottom footer and click the copyright text (*"Opinawaz Universal Public School. All rights reserved."*) **7 times consecutively**.
 
 Once on the sign-in screen, click **Continue with Google** and authenticate using an authorized Google email address.
@@ -317,6 +339,7 @@ Once on the sign-in screen, click **Continue with Google** and authenticate usin
 ## 📞 Institutional Contacts & Location
 
 - **Institution**: Opinawaz Universal Public School
+- **Official Website**: [https://opinawaz.netlify.app/](https://opinawaz.netlify.app/)
 - **Location**: Karewa, Kulgam, Jammu & Kashmir — 192231
 - **Telephone**: `+91 94190 28723` / `+91 1931 260000`
 - **Email**: `opnawazschool@gmail.com`
